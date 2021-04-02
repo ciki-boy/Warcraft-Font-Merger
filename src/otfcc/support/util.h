@@ -15,7 +15,6 @@
 
 #include "dep/json-builder.h"
 #include "dep/json.h"
-#include "dep/sds.h"
 #include "dep/uthash.h"
 
 #include "caryll/ownership.h"

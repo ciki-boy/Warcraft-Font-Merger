@@ -6,9 +6,10 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include <limits.h>
+
 #include "caryll/ownership.h"
 #include "support/otfcc-alloc.h"
-#include "caryll/buffer.h"
+#include <caryll/buffer.hpp>
 
 struct __caryll_bkblock;
 typedef enum {
@@ -47,8 +48,8 @@ bk_Block *_bkblock_init();
 bk_Block *bk_new_Block(int type0, ...);
 bk_Block *bk_push(bk_Block *b, int type0, ...);
 bk_Block *bk_newBlockFromStringLen(size_t len, const char *str);
-bk_Block *bk_newBlockFromBuffer(MOVE caryll_Buffer *buf);
-bk_Block *bk_newBlockFromBufferCopy(OBSERVE caryll_Buffer *buf);
+bk_Block *bk_newBlockFromBuffer(caryll::buffer &buf);
+bk_Block *bk_newBlockFromBufferCopy(const caryll::buffer &buf);
 bool bk_cellIsPointer(bk_Cell *cell);
 void bk_printBlock(bk_Block *b);
 

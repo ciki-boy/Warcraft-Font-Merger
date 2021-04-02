@@ -35,14 +35,14 @@ static uint32_t dfs_insert_cells(bk_Block *b, bk_Graph *f, uint32_t *order) {
 }
 
 static int _by_height(const void *_a, const void *_b) {
-	const bk_GraphNode *a = _a;
-	const bk_GraphNode *b = _b;
+	const bk_GraphNode *a = static_cast<const bk_GraphNode *>(_a);
+	const bk_GraphNode *b = static_cast<const bk_GraphNode *>(_b);
 	return a->height == b->height ? a->order - b->order : b->height - a->height;
 }
 
 static int _by_order(const void *_a, const void *_b) {
-	const bk_GraphNode *a = _a;
-	const bk_GraphNode *b = _b;
+	const bk_GraphNode *a = static_cast<const bk_GraphNode *>(_a);
+	const bk_GraphNode *b = static_cast<const bk_GraphNode *>(_b);
 	return a->block && b->block && a->block->_visitstate != b->block->_visitstate // Visited first
 	           ? b->block->_visitstate - a->block->_visitstate
 	           : a->block && b->block && a->block->_depth != b->block->_depth // By depth
@@ -309,32 +309,32 @@ static bool try_untangle(bk_Graph *f, uint16_t passes) {
 	return didUntangle;
 }
 
-static void otfcc_build_bkblock(caryll_Buffer *buf, bk_Block *b, size_t *offsets) {
+static void otfcc_build_bkblock(caryll::buffer &buf, bk_Block *b, size_t *offsets) {
 	for (uint32_t j = 0; j < b->length; j++) {
 		switch (b->cells[j].t) {
 			case b8:
-				bufwrite8(buf, b->cells[j].z);
+				buf.write8(b->cells[j].z);
 				break;
 			case b16:
-				bufwrite16b(buf, b->cells[j].z);
+				buf.write16b(b->cells[j].z);
 				break;
 			case b32:
-				bufwrite32b(buf, b->cells[j].z);
+				buf.write32b(b->cells[j].z);
 				break;
 			case p16:
 			case sp16:
 				if (b->cells[j].p) {
-					bufwrite16b(buf, getoffset(offsets, b, b->cells[j].p, 16));
+					buf.write16b(getoffset(offsets, b, b->cells[j].p, 16));
 				} else {
-					bufwrite16b(buf, 0);
+					buf.write16b(0);
 				}
 				break;
 			case p32:
 			case sp32:
 				if (b->cells[j].p) {
-					bufwrite32b(buf, getoffset(offsets, b, b->cells[j].p, 32));
+					buf.write32b(getoffset(offsets, b, b->cells[j].p, 32));
 				} else {
-					bufwrite32b(buf, 0);
+					buf.write32b(0);
 				}
 				break;
 			default:
@@ -343,8 +343,8 @@ static void otfcc_build_bkblock(caryll_Buffer *buf, bk_Block *b, size_t *offsets
 	}
 }
 
-caryll_Buffer *bk_build_Graph(bk_Graph *f) {
-	caryll_Buffer *buf = bufnew();
+caryll::buffer bk_build_Graph(bk_Graph *f) {
+	caryll::buffer buf;
 	size_t *offsets;
 	NEW(offsets, f->length + 1);
 
@@ -393,18 +393,18 @@ void bk_untangleGraph(/*BORROW*/ bk_Graph *f) {
 	} while (tangled && passes < 16);
 }
 
-caryll_Buffer *bk_build_Block(/*MOVE*/ bk_Block *root) {
+caryll::buffer bk_build_Block(/*MOVE*/ bk_Block *root) {
 	bk_Graph *f = bk_newGraphFromRootBlock(root);
 	bk_minimizeGraph(f);
 	bk_untangleGraph(f);
-	caryll_Buffer *buf = bk_build_Graph(f);
+	caryll::buffer buf = bk_build_Graph(f);
 	bk_delete_Graph(f);
 	return buf;
 }
-caryll_Buffer *bk_build_Block_noMinimize(/*MOVE*/ bk_Block *root) {
+caryll::buffer bk_build_Block_noMinimize(/*MOVE*/ bk_Block *root) {
 	bk_Graph *f = bk_newGraphFromRootBlock(root);
 	bk_untangleGraph(f);
-	caryll_Buffer *buf = bk_build_Graph(f);
+	caryll::buffer buf = bk_build_Graph(f);
 	bk_delete_Graph(f);
 	return buf;
 }

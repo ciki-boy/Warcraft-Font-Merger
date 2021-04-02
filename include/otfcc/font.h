@@ -6,7 +6,7 @@
 struct _caryll_font;
 typedef struct _caryll_font otfcc_Font;
 
-#include "otfcc/glyph-order.h"
+#include "glyph-order.hpp"
 
 #include "otfcc/table/fvar.h"
 

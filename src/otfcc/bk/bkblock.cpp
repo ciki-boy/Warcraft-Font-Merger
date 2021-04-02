@@ -65,7 +65,7 @@ static void vbkpushitems(bk_Block *b, bk_CellType type0, va_list ap) {
 			bk_Block *par = va_arg(ap, bk_Block *);
 			bkblock_pushptr(b, curtype, par);
 		}
-		curtype = va_arg(ap, int);
+		curtype = static_cast<bk_CellType>(va_arg(ap, int));
 	}
 }
 
@@ -73,7 +73,7 @@ bk_Block *bk_new_Block(int type0, ...) {
 	va_list ap;
 	va_start(ap, type0);
 	bk_Block *b = _bkblock_init();
-	vbkpushitems(b, type0, ap);
+	vbkpushitems(b, static_cast<bk_CellType>(type0), ap);
 	va_end(ap);
 	return b;
 }
@@ -81,7 +81,7 @@ bk_Block *bk_new_Block(int type0, ...) {
 bk_Block *bk_push(bk_Block *b, int type0, ...) {
 	va_list ap;
 	va_start(ap, type0);
-	vbkpushitems(b, type0, ap);
+	vbkpushitems(b, static_cast<bk_CellType>(type0), ap);
 	va_end(ap);
 	return b;
 }
@@ -95,20 +95,20 @@ bk_Block *bk_newBlockFromStringLen(size_t len, const char *str) {
 	return b;
 }
 
-bk_Block *bk_newBlockFromBuffer(MOVE caryll_Buffer *buf) {
+bk_Block *bk_newBlockFromBuffer(caryll::buffer &buf) {
 	if (!buf) return NULL;
 	bk_Block *b = bk_new_Block(bkover);
-	for (size_t j = 0; j < buf->size; j++) {
-		bkblock_pushint(b, b8, buf->data[j]);
+	for (auto x : buf) {
+		bkblock_pushint(b, b8, x);
 	}
-	buffree(buf);
+	buf.clear();
 	return b;
 }
-bk_Block *bk_newBlockFromBufferCopy(OBSERVE caryll_Buffer *buf) {
+bk_Block *bk_newBlockFromBufferCopy(const caryll::buffer &buf){
 	if (!buf) return NULL;
 	bk_Block *b = bk_new_Block(bkover);
-	for (size_t j = 0; j < buf->size; j++) {
-		bkblock_pushint(b, b8, buf->data[j]);
+	for (auto x : buf) {
+		bkblock_pushint(b, b8, x);
 	}
 	return b;
 }
