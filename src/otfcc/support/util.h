@@ -15,14 +15,13 @@
 
 #include "dep/json-builder.h"
 #include "dep/json.h"
-#include "dep/uthash.h"
 
 #include "caryll/ownership.h"
-#include "caryll/buffer.h"
+#include "caryll/buffer.hpp"
 
-#include "otfcc/handle.h"
+#include "otfcc/handle.hpp"
 #include "otfcc/primitives.h"
-#include "otfcc/options.h"
+#include "otfcc/options.hpp"
 
 #include "aliases.h"
 #include "otfcc-alloc.h"
@@ -30,7 +29,6 @@
 #include "vector-impl.h"
 
 #include "base64/base64.h"
-#include "json/json-ident.h"
 #include "json/json-funcs.h"
 #include "bin-io.h"
 #include "tag.h"

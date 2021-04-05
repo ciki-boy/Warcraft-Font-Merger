@@ -3,15 +3,15 @@
 
 #include "dep/json.h"
 
-#include "caryll/buffer.h"
+#include "caryll/buffer.hpp"
 #include "caryll/ownership.h"
 #include "caryll/vector.h"
 
-#include "otfcc/handle.h"
-#include "otfcc/glyph-order.h"
+#include "otfcc/handle.hpp"
+#include "otfcc/glyph-order.hpp"
 #include "otfcc/primitives.h"
 #include "otfcc/sfnt.h"
-#include "otfcc/options.h"
+#include "otfcc/options.hpp"
 
 #include "otfcc/vf/vq.h"
 

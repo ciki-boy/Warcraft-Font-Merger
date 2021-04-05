@@ -5,7 +5,7 @@
 #include "caryll/element.h"
 #include "caryll/vector.h"
 #include "otfcc/primitives.h"
-#include "otfcc/handle.h"
+#include "otfcc/handle.hpp"
 
 #include "region.h"
 

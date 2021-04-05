@@ -5,9 +5,8 @@ rm -r build/ release/
 cmake . -B build/ \
 	-DCMAKE_EXPORT_COMPILE_COMMANDS=1 \
 	-DCMAKE_BUILD_TYPE="RelWithDebugInfo"
-cmake --build build/ -j$(nproc)
+cmake --build build/ -j1
 
-ln -s build/compile_commands.json .
 source build/config/config.sh
 VERSION=$VERSION-dev
 

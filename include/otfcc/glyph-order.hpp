@@ -8,7 +8,6 @@
 
 #include "caryll/ownership.h"
 #include "dep/json.h"
-#include "otfcc/options.h"
 #include "otfcc/primitives.h"
 
 namespace otfcc {
