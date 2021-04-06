@@ -1,7 +1,6 @@
 #pragma once
 
 #include <array>
-#include <bits/stdint-uintn.h>
 #include <climits>
 #include <cmath>
 #include <cstddef>
@@ -10,14 +9,14 @@
 
 #include <nlohmann/json.hpp>
 
-#include "dep/json-builder.h"
-#include "dep/json.h"
-
-#include "caryll/ownership.h"
-#include "nlohmann/json_fwd.hpp"
 #include "otfcc/primitives.h"
+
+#if defined(OTFCC_ENABLE_VARIATION) && OTFCC_ENABLE_VARIATION
+
 #include "otfcc/table/fvar.h"
 #include "otfcc/vf/vq.h"
+
+#endif
 
 namespace otfcc::json {
 
@@ -69,19 +68,4 @@ template <size_t N> inline uint32_t parse_flags(const nlohmann::json &v, const c
 		return 0;
 }
 
-inline nlohmann::json preserialize(MOVE nlohmann::json x) {
-#ifdef CARYLL_USE_PRE_SERIALIZED
-	json_serialize_opts opts = {.mode = json_serialize_mode_packed};
-	size_t preserialize_len = json_measure_ex(x, opts);
-	char *buf = (char *)malloc(preserialize_len);
-	json_serialize_ex(buf, x, opts);
-	json_builder_free(x);
-
-	nlohmann::json xx = json_string_new_nocopy((uint32_t)(preserialize_len - 1), buf);
-	xx->type = json_pre_serialized;
-	return xx;
-#else
-	return x;
-#endif
-}
 } // namespace otfcc::json

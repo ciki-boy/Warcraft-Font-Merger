@@ -1,13 +1,11 @@
 #pragma once
 
+#include <cstdint>
 #include <string>
 
 #include "caryll/element.h"
 #include "caryll/ownership.h"
-#include "primitives.h"
-#include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
+#include "primitives.hpp"
 
 namespace otfcc {
 

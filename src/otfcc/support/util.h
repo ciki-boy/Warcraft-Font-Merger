@@ -20,7 +20,7 @@
 #include "caryll/buffer.hpp"
 
 #include "otfcc/handle.hpp"
-#include "otfcc/primitives.h"
+#include "otfcc/primitives.hpp"
 #include "otfcc/options.hpp"
 
 #include "aliases.h"
@@ -29,7 +29,7 @@
 #include "vector-impl.h"
 
 #include "base64/base64.h"
-#include "json/json-funcs.h"
+#include "json/json-funcs.hpp"
 #include "bin-io.h"
 #include "tag.h"
 

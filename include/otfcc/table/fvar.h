@@ -1,8 +1,10 @@
 #ifndef CARYLL_INCLUDE_TABLE_FVAR_H
 #define CARYLL_INCLUDE_TABLE_FVAR_H
 
-#include "table-common.h"
+#error OpenType font variation is not implemented.
+
 #include "otfcc/vf/vf.h"
+#include "table-common.h"
 
 // vf_Axis and vf_Axes are defined in vf/vf.h
 // fvar_Instance is defined below
