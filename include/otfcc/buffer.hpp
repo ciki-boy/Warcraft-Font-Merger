@@ -7,7 +7,7 @@
 #include <string>
 #include <vector>
 
-namespace caryll {
+namespace otfcc {
 
 class buffer {
   public:

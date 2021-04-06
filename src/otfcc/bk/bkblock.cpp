@@ -95,7 +95,7 @@ bk_Block *bk_newBlockFromStringLen(size_t len, const char *str) {
 	return b;
 }
 
-bk_Block *bk_newBlockFromBuffer(caryll::buffer &buf) {
+bk_Block *bk_newBlockFromBuffer(otfcc::buffer &buf) {
 	if (!buf) return NULL;
 	bk_Block *b = bk_new_Block(bkover);
 	for (auto x : buf) {
@@ -104,7 +104,7 @@ bk_Block *bk_newBlockFromBuffer(caryll::buffer &buf) {
 	buf.clear();
 	return b;
 }
-bk_Block *bk_newBlockFromBufferCopy(const caryll::buffer &buf){
+bk_Block *bk_newBlockFromBufferCopy(const otfcc::buffer &buf){
 	if (!buf) return NULL;
 	bk_Block *b = bk_new_Block(bkover);
 	for (auto x : buf) {

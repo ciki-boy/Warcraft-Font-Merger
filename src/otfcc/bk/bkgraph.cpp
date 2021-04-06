@@ -309,7 +309,7 @@ static bool try_untangle(bk_Graph *f, uint16_t passes) {
 	return didUntangle;
 }
 
-static void otfcc_build_bkblock(caryll::buffer &buf, bk_Block *b, size_t *offsets) {
+static void otfcc_build_bkblock(otfcc::buffer &buf, bk_Block *b, size_t *offsets) {
 	for (uint32_t j = 0; j < b->length; j++) {
 		switch (b->cells[j].t) {
 			case b8:
@@ -343,8 +343,8 @@ static void otfcc_build_bkblock(caryll::buffer &buf, bk_Block *b, size_t *offset
 	}
 }
 
-caryll::buffer bk_build_Graph(bk_Graph *f) {
-	caryll::buffer buf;
+otfcc::buffer bk_build_Graph(bk_Graph *f) {
+	otfcc::buffer buf;
 	size_t *offsets;
 	NEW(offsets, f->length + 1);
 
@@ -393,18 +393,18 @@ void bk_untangleGraph(/*BORROW*/ bk_Graph *f) {
 	} while (tangled && passes < 16);
 }
 
-caryll::buffer bk_build_Block(/*MOVE*/ bk_Block *root) {
+otfcc::buffer bk_build_Block(/*MOVE*/ bk_Block *root) {
 	bk_Graph *f = bk_newGraphFromRootBlock(root);
 	bk_minimizeGraph(f);
 	bk_untangleGraph(f);
-	caryll::buffer buf = bk_build_Graph(f);
+	otfcc::buffer buf = bk_build_Graph(f);
 	bk_delete_Graph(f);
 	return buf;
 }
-caryll::buffer bk_build_Block_noMinimize(/*MOVE*/ bk_Block *root) {
+otfcc::buffer bk_build_Block_noMinimize(/*MOVE*/ bk_Block *root) {
 	bk_Graph *f = bk_newGraphFromRootBlock(root);
 	bk_untangleGraph(f);
-	caryll::buffer buf = bk_build_Graph(f);
+	otfcc::buffer buf = bk_build_Graph(f);
 	bk_delete_Graph(f);
 	return buf;
 }

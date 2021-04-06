@@ -4,11 +4,8 @@
 #include <string>
 #include <unordered_map>
 
-#include <otfcc/handle.hpp>
-
-#include "caryll/ownership.h"
-#include "dep/json.h"
-#include "otfcc/primitives.h"
+#include "handle.hpp"
+#include "primitives.hpp"
 
 namespace otfcc {
 
