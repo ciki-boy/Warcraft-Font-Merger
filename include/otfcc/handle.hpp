@@ -3,8 +3,6 @@
 #include <cstdint>
 #include <string>
 
-#include "caryll/element.h"
-#include "caryll/ownership.h"
 #include "primitives.hpp"
 
 namespace otfcc {
@@ -34,9 +32,20 @@ struct handle {
 	void reset() { *this = handle{}; }
 };
 
-struct glyph_handle : handle {};
-struct fd_handle : handle {};
-struct lookup_handle : handle {};
-struct axis_handle : handle {};
+struct glyph_handle : handle {
+	glyph_handle(const handle &handle_) : handle(handle_) {}
+};
+
+struct fd_handle : handle {
+	fd_handle(const handle &handle_) : handle(handle_) {}
+};
+
+struct lookup_handle : handle {
+	lookup_handle(const handle &handle_) : handle(handle_) {}
+};
+
+struct axis_handle : handle {
+	axis_handle(const handle &handle_) : handle(handle_) {}
+};
 
 } // namespace otfcc

@@ -1,18 +1,14 @@
-#ifndef CARYLL_INCLUDE_TABLE_COMMON_H
-#define CARYLL_INCLUDE_TABLE_COMMON_H
+#pragma once
 
 #include "dep/json.h"
 
-#include "caryll/buffer.hpp"
-#include "caryll/ownership.h"
-#include "caryll/vector.h"
+#include "../buffer.hpp"
+#include "../handle.hpp"
+#include "../glyph-order.hpp"
+#include "../primitives.hpp"
+#include "../sfnt.h"
+#include "../options.hpp"
 
-#include "otfcc/handle.hpp"
-#include "otfcc/glyph-order.hpp"
-#include "otfcc/primitives.h"
-#include "otfcc/sfnt.h"
-#include "otfcc/options.hpp"
-
+#if defined (OTFCC_ENABLE_VARIATION) && OTFCC_ENABLE_VARIATION
 #include "otfcc/vf/vq.h"
-
 #endif

@@ -1,11 +1,11 @@
-#ifndef CARYLL_INCLUDE_TABLE_HHEA_H
-#define CARYLL_INCLUDE_TABLE_HHEA_H
+#pragma once
 
-#include "table-common.h"
+#include "../primitives.hpp"
 
-typedef struct {
-	// Horizontal header
-	f16dot16 version;
+namespace otfcc::table {
+
+struct hhea {
+	fixed version;
 	int16_t ascender;
 	int16_t descender;
 	int16_t lineGap;
@@ -18,8 +18,7 @@ typedef struct {
 	int16_t caretOffset;
 	int16_t reserved[4];
 	int16_t metricDataFormat;
-	uint16_t numberOfMetrics;
-} table_hhea;
-extern caryll_RefElementInterface(table_hhea) table_iHhea;
+	uint16_t numberOfHMetrics;
+};
 
-#endif
+} // namespace otfcc::table

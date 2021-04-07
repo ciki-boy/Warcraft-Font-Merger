@@ -1,11 +1,11 @@
-#ifndef CARYLL_INCLUDE_TABLE_MAXP_H
-#define CARYLL_INCLUDE_TABLE_MAXP_H
+#pragma once
 
-#include "table-common.h"
+#include "../primitives.hpp"
 
-typedef struct {
-	// Maximum profile
-	f16dot16 version;
+namespace otfcc::table {
+
+struct maxp {
+	fixed version;
 	uint16_t numGlyphs;
 	uint16_t maxPoints;
 	uint16_t maxContours;
@@ -20,8 +20,6 @@ typedef struct {
 	uint16_t maxSizeOfInstructions;
 	uint16_t maxComponentElements;
 	uint16_t maxComponentDepth;
-} table_maxp;
+};
 
-extern caryll_RefElementInterface(table_maxp) table_iMaxp;
-
-#endif
+} // namespace otfcc::table

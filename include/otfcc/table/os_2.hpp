@@ -1,10 +1,10 @@
-#ifndef CARYLL_INCLUDE_TABLE_OS_2_H
-#define CARYLL_INCLUDE_TABLE_OS_2_H
+#pragma once
 
-#include "table-common.h"
+#include <cstdint>
 
-typedef struct {
-	// OS/2 and Windows specific metrics
+namespace otfcc::table {
+
+struct os_2 {
 	uint16_t version;
 	int16_t xAvgCharWidth;
 	uint16_t usWeightClass;
@@ -44,7 +44,6 @@ typedef struct {
 	uint16_t usMaxContext;
 	uint16_t usLowerOpticalPointSize;
 	uint16_t usUpperOpticalPointSize;
-} table_OS_2;
-extern caryll_RefElementInterface(table_OS_2) table_iOS_2;
+};
 
-#endif
+} // namespace otfcc::table

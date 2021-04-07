@@ -1,8 +1,6 @@
-#ifndef CARYLL_CONSOLIDATE_H
-#define CARYLL_CONSOLIDATE_H
+#pragma once
 
-#include "otfcc/font.h"
+#include "otfcc/font.hpp"
+#include "otfcc/options.hpp"
 
-extern void otfcc_consolidateFont(otfcc_Font *font, const otfcc_Options *options);
-
-#endif
+void otfcc_consolidateFont(otfcc::font &font, const otfcc::options *options);

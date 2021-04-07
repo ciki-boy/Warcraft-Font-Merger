@@ -1,12 +1,13 @@
-#ifndef CARYLL_INCLUDE_TABLE_HEAD_H
-#define CARYLL_INCLUDE_TABLE_HEAD_H
+#pragma once
 
+#include "otfcc/primitives.hpp"
 #include "table-common.h"
 
-typedef struct {
-	// Font header
-	f16dot16 version;
-	uint32_t fontRevision;
+namespace otfcc::table {
+
+struct head {
+	fixed version;
+	fixed fontRevision;
 	uint32_t checkSumAdjustment;
 	uint32_t magicNumber;
 	uint16_t flags;
@@ -22,8 +23,6 @@ typedef struct {
 	int16_t fontDirectoryHint;
 	int16_t indexToLocFormat;
 	int16_t glyphDataFormat;
-} table_head;
+};
 
-extern caryll_RefElementInterface(table_head) table_iHead;
-
-#endif
+} // namespace otfcc::table

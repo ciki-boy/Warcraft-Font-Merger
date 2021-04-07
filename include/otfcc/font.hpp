@@ -1,55 +1,60 @@
-#ifndef CARYLL_FONT_H
-#define CARYLL_FONT_H
+#pragma once
 
 #include "sfnt.h"
 
-struct _caryll_font;
-typedef struct _caryll_font otfcc_Font;
+namespace otfcc {
+struct font;
+};
 
 #include "glyph-order.hpp"
 
-#include "otfcc/table/fvar.h"
+#if defined(OTFCC_ENABLE_VARIATION) && OTFCC_ENABLE_VARIATION
+#include "table/fvar.h"
+#endif
 
-#include "otfcc/table/head.h"
-#include "otfcc/table/glyf.h"
-#include "otfcc/table/CFF.h"
-#include "otfcc/table/maxp.h"
-#include "otfcc/table/hhea.h"
-#include "otfcc/table/hmtx.h"
-#include "otfcc/table/hdmx.h"
-#include "otfcc/table/vhea.h"
-#include "otfcc/table/vmtx.h"
-#include "otfcc/table/OS_2.h"
-#include "otfcc/table/post.h"
-#include "otfcc/table/name.h"
-#include "otfcc/table/meta.h"
+#include "table/cff_.hpp"
+#include "table/os_2.hpp"
+#include "table/glyf.hpp"
+#include "table/hdmx.hpp"
+#include "table/head.hpp"
+#include "table/hhea.hpp"
+#include "table/hmtx.hpp"
+#include "table/maxp.hpp"
+#include "table/meta.h"
+#include "table/name.h"
+#include "table/post.h"
+#include "table/vhea.h"
+#include "table/vmtx.hpp"
 
-#include "otfcc/table/cmap.h"
-#include "otfcc/table/cvt.h"
-#include "otfcc/table/fpgm-prep.h"
-#include "otfcc/table/gasp.h"
-#include "otfcc/table/VDMX.h"
+#include "table/VDMX.h"
+#include "table/cmap.h"
+#include "table/cvt.h"
+#include "table/fpgm-prep.h"
+#include "table/gasp.h"
 
-#include "otfcc/table/LTSH.h"
-#include "otfcc/table/VORG.h"
+#include "table/LTSH.h"
+#include "table/VORG.h"
 
-#include "otfcc/table/GDEF.h"
-#include "otfcc/table/BASE.h"
-#include "otfcc/table/otl.h"
+#include "table/BASE.h"
+#include "table/GDEF.h"
+#include "table/otl.h"
 
-#include "otfcc/table/CPAL.h"
-#include "otfcc/table/COLR.h"
-#include "otfcc/table/SVG.h"
+#include "table/COLR.h"
+#include "table/CPAL.h"
+#include "table/SVG.h"
 
-#include "otfcc/table/_TSI.h"
-#include "otfcc/table/TSI5.h"
+#include "table/TSI5.h"
+#include "table/_TSI.h"
 
-typedef enum { FONTTYPE_TTF, FONTTYPE_CFF } otfcc_font_subtype;
+struct font {
 
-struct _caryll_font {
-	otfcc_font_subtype subtype;
+	enum class outline { ttf, cff };
 
+	outline subtype;
+
+#if defined(OTFCC_ENABLE_VARIATION) && OTFCC_ENABLE_VARIATION
 	table_fvar *fvar;
+#endif
 
 	table_head *head;
 	table_hhea *hhea;
@@ -116,5 +121,3 @@ typedef struct otfcc_IFontSerializer {
 } otfcc_IFontSerializer;
 otfcc_IFontSerializer *otfcc_newJsonWriter();
 otfcc_IFontSerializer *otfcc_newOTFWriter();
-
-#endif
