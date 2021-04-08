@@ -1,108 +1,101 @@
 #pragma once
 
+#include <bits/stdint-intn.h>
+#include <bits/stdint-uintn.h>
 #include <cstdarg>
 #include <cstddef>
 #include <cstdint>
 #include <initializer_list>
+#include <iterator>
 #include <string>
+#include <string_view>
 #include <vector>
 
 namespace otfcc {
 
-class buffer {
-  public:
-	using value_type = char;
-	using pointer = value_type *;
-	using const_pointer = const value_type *;
-	using iterator = std::vector<value_type>::iterator;
-	using const_iterator = std::vector<value_type>::const_iterator;
+struct buffer_view : std::string_view {
 
-  private:
-	std::vector<value_type> _data;
+	using base = std::string_view;
 	size_t _cursor;
 
-  public:
+	buffer_view(const char *data, size_t length) : base(data, length) {}
+	buffer_view(const std::string_view &view) : base(view) {}
+	buffer_view(const buffer_view &) = default;
+	~buffer_view() = default;
+	buffer_view &operator=(const buffer_view &) = default;
+
+	operator bool() const { return empty(); }
+	size_t pos() const { return _cursor; }
+	void seek(size_t pos) { _cursor = pos; }
+
+	uint8_t read8u() { return uint8_t((*this)[_cursor++]); }
+	uint16_t read16u() {
+		uint16_t b0 = read8u();
+		uint16_t b1 = read8u();
+		return (b0 << 8) | b1;
+	}
+	uint32_t read24u() {
+		uint32_t b0 = read8u();
+		uint32_t b1 = read8u();
+		uint32_t b2 = read8u();
+		return (b0 << 16) | (b1 << 8) | b2;
+	}
+	uint32_t read32u() {
+		uint32_t w0 = read16u();
+		uint32_t w1 = read16u();
+		return (w0 << 16) | w1;
+	}
+	uint64_t read64u() {
+		uint64_t dw0 = read32u();
+		uint64_t dw1 = read32u();
+		return (dw0 << 32) | dw1;
+	}
+	int8_t read8s() { return read8u(); }
+	int16_t read16s() { return read16u(); }
+	int32_t read32s() { return read32u(); }
+	int64_t read64s() { return read64u(); }
+};
+
+struct buffer : std::string {
+
+	using base = std::string;
+	size_t _cursor;
+
 	buffer() : _cursor(0) {}
-	buffer(std::initializer_list<value_type> il) : _data(il), _cursor(il.size()) {}
+	buffer(std::initializer_list<value_type> il) : base(il), _cursor(il.size()) {}
 	buffer(const buffer &) = default;
 	buffer(buffer &&) = default;
 	~buffer() = default;
 	buffer &operator=(const buffer &) = default;
 	buffer &operator=(buffer &&) = default;
 
-	bool empty() const { return _data.empty(); }
-	operator bool() const { return _data.empty(); }
-	size_t size() const { return _data.size(); }
-	size_t length() const { return _data.size(); }
+	operator bool() const { return empty(); }
 	size_t pos() const { return _cursor; }
 	void seek(size_t pos) { _cursor = pos; }
-	void clear() { _data.clear(); }
-
-	pointer data() { return _data.data(); }
-	const_pointer data() const { return _data.data(); }
-	iterator begin() { return _data.begin(); }
-	const_iterator begin() const { return _data.begin(); }
-	iterator end() { return _data.end(); }
-	const_iterator end() const { return _data.end(); }
-	const_iterator cbegin() const { return _data.cbegin(); }
-	const_iterator cend() const { return _data.cend(); }
 
 	void write8(uint8_t x) {
-		if (_cursor == _data.size()) [[likely]] {
-			_data.push_back(x);
+		if (_cursor == size()) [[likely]] {
+			push_back(x);
 			_cursor++;
 		} else [[unlikely]]
-			_data[_cursor++] = x;
+			(*this)[_cursor++] = x;
 	}
-	void write16l(uint16_t x) {
-		write8(x & 0xff);
-		write8((x >> 8) & 0xff);
-	}
-	void write16b(uint16_t x) {
+	void write16(uint16_t x) {
 		write8((x >> 8) & 0xff);
 		write8(x & 0xff);
 	}
-	void write24l(uint32_t x) {
-		write8(x & 0xff);
-		write8((x >> 8) & 0xff);
-		write8((x >> 16) & 0xff);
-	}
-	void write24b(uint32_t x) {
+	void write24(uint32_t x) {
 		write8((x >> 16) & 0xff);
 		write8((x >> 8) & 0xff);
 		write8(x & 0xff);
 	}
-	void write32l(uint32_t x) {
-		write8(x & 0xff);
-		write8((x >> 8) & 0xff);
-		write8((x >> 16) & 0xff);
-		write8((x >> 24) & 0xff);
+	void write32(uint32_t x) {
+		write16((x >> 16) & 0xffff);
+		write16(x & 0xffff);
 	}
-	void write32b(uint32_t x) {
-		write8((x >> 24) & 0xff);
-		write8((x >> 16) & 0xff);
-		write8((x >> 8) & 0xff);
-		write8(x & 0xff);
-	}
-	void write64l(uint64_t x) {
-		write8(x & 0xff);
-		write8((x >> 8) & 0xff);
-		write8((x >> 16) & 0xff);
-		write8((x >> 24) & 0xff);
-		write8((x >> 32) & 0xff);
-		write8((x >> 40) & 0xff);
-		write8((x >> 48) & 0xff);
-		write8((x >> 56) & 0xff);
-	}
-	void write64b(uint64_t x) {
-		write8((x >> 56) & 0xff);
-		write8((x >> 48) & 0xff);
-		write8((x >> 40) & 0xff);
-		write8((x >> 32) & 0xff);
-		write8((x >> 24) & 0xff);
-		write8((x >> 16) & 0xff);
-		write8((x >> 8) & 0xff);
-		write8(x & 0xff);
+	void write64(uint64_t x) {
+		write32((x >> 32) & 0xffffffff);
+		write32(x & 0xffffffff);
 	}
 
 	template <typename... Ts> void nwrite8(Ts... args) { (write8(args), ...); }
@@ -116,27 +109,53 @@ class buffer {
 			write8(ch);
 		}
 	}
-	void write(const char *buf, size_t len) {
+	void write(const char *data, size_t len) {
 		for (size_t i = 0; i < len; i++)
-			write8(buf[i]);
+			write8(data[i]);
 	}
 	void write(const buffer &buf) {
 		for (uint8_t byte : buf)
 			write8(byte);
 	}
 
+	void append8(uint8_t x) {
+		push_back(x);
+		_cursor++;
+	}
+	void append16(uint16_t x) {
+		append8((x >> 8) & 0xff);
+		append8(x & 0xff);
+	}
+	void append24(uint32_t x) {
+		append8((x >> 16) & 0xff);
+		append8((x >> 8) & 0xff);
+		append8(x & 0xff);
+	}
+	void append32(uint32_t x) {
+		append16((x >> 16) & 0xffff);
+		append16(x & 0xffff);
+	}
+	void append64(uint64_t x) {
+		append32((x >> 32) & 0xffffffff);
+		append32(x & 0xffffffff);
+	}
+
+	template <typename... Ts> void nappend8(Ts... args) { (append8(args), ...); }
+
+	/* `append` functions are implicitly inherited from std::string */
+
 	void align4() {
 		size_t cp = pos();
 		seek(size());
 		switch (size() % 4) {
 		case 1:
-			write8(0);
+			append8(0);
 			[[fallthrough]];
 		case 2:
-			write8(0);
+			append8(0);
 			[[fallthrough]];
 		case 3:
-			write8(0);
+			append8(0);
 			[[fallthrough]];
 		default:
 			break;
@@ -144,7 +163,7 @@ class buffer {
 		seek(cp);
 	}
 
-	// bufpingpong16b writes a buffer and an offset towards it.
+	// bufpingpong16 writes a buffer and an offset towards it.
 	// [ ^                            ] + ###### that
 	//   ^cp             ^offset
 	//                           |
@@ -152,13 +171,13 @@ class buffer {
 	// [ @^              ######       ] , and the value of [@] equals to the former offset.
 	//    ^cp                  ^offset
 	// Common in writing OpenType features.
-	void ping16b(size_t &offset, size_t &cp) {
-		write16b(offset);
+	void ping16(size_t &offset, size_t &cp) {
+		write16(offset);
 		cp = pos();
 		seek(offset);
 	}
-	void ping16bd(size_t &offset, size_t &shift, size_t &cp) {
-		write16b(offset - shift);
+	void ping16d(size_t &offset, size_t &shift, size_t &cp) {
+		write16(offset - shift);
 		cp = pos();
 		seek(offset);
 	}
@@ -166,8 +185,8 @@ class buffer {
 		offset = pos();
 		seek(cp);
 	}
-	void pingpong16b(buffer &buf, size_t &offset, size_t &cp) {
-		write16b(offset);
+	void pingpong16(buffer &buf, size_t &offset, size_t &cp) {
+		write16(offset);
 		cp = pos();
 		seek(offset);
 		write(buf);
@@ -188,4 +207,4 @@ class buffer {
 	}
 };
 
-} // namespace caryll
+} // namespace otfcc

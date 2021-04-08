@@ -316,25 +316,25 @@ static void otfcc_build_bkblock(otfcc::buffer &buf, bk_Block *b, size_t *offsets
 				buf.write8(b->cells[j].z);
 				break;
 			case b16:
-				buf.write16b(b->cells[j].z);
+				buf.write16(b->cells[j].z);
 				break;
 			case b32:
-				buf.write32b(b->cells[j].z);
+				buf.write32(b->cells[j].z);
 				break;
 			case p16:
 			case sp16:
 				if (b->cells[j].p) {
-					buf.write16b(getoffset(offsets, b, b->cells[j].p, 16));
+					buf.write16(getoffset(offsets, b, b->cells[j].p, 16));
 				} else {
-					buf.write16b(0);
+					buf.write16(0);
 				}
 				break;
 			case p32:
 			case sp32:
 				if (b->cells[j].p) {
-					buf.write32b(getoffset(offsets, b, b->cells[j].p, 32));
+					buf.write32(getoffset(offsets, b, b->cells[j].p, 32));
 				} else {
-					buf.write32b(0);
+					buf.write32(0);
 				}
 				break;
 			default:

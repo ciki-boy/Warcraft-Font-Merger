@@ -1,10 +1,13 @@
-#ifndef CARYLL_INCLUDE_TABLE_VHEA_H
-#define CARYLL_INCLUDE_TABLE_VHEA_H
+#pragma once
 
-#include "table-common.h"
+#include <cstdint>
 
-typedef struct {
-	f16dot16 version;
+#include "../primitives.hpp"
+
+namespace otfcc::table {
+
+struct vhea {
+	fixed version;
 	int16_t ascent;
 	int16_t descent;
 	int16_t lineGap;
@@ -21,8 +24,6 @@ typedef struct {
 	int16_t dummy3;
 	int16_t metricDataFormat;
 	uint16_t numOfLongVerMetrics;
-} table_vhea;
+};
 
-extern caryll_RefElementInterface(table_vhea) table_iVhea;
-
-#endif
+} // namespace otfcc::table

@@ -67,7 +67,7 @@ class glyph_order {
 		}
 	}
 
-	bool consolidate_handle(glyphid_t gid, handle &h) {
+	bool consolidate_handle(handle &h) const {
 		switch (h.state) {
 		case handle::HANDLE_STATE_CONSOLIDATED: {
 			auto it_name = _by_name.find(h.name);
