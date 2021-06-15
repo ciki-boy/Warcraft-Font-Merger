@@ -1,34 +1,89 @@
-#include "consolidate.h"
+#pragma once
 
-#include "support/util.h"
-#include "table/all.h"
+#include "font.hpp"
+#include "options.hpp"
+#include "otfcc/primitives.hpp"
+#include <variant>
 
-#include "otl/gsub-single.h"
-#include "otl/gsub-multi.h"
-#include "otl/gsub-ligature.h"
-#include "otl/gsub-reverse.h"
-#include "otl/gpos-single.h"
-#include "otl/gpos-pair.h"
-#include "otl/gpos-cursive.h"
-#include "otl/chaining.h"
-#include "otl/mark.h"
-#include "otl/GDEF.h"
+namespace otfcc::consolidate {
+
+namespace otl {
+
+void coverage(font &font, table::otl::coverage &coverage, const options &options) {
+	for (auto h = coverage.begin(); h != coverage.end();)
+		if (!font.glyph_order.consolidate_handle(*h)) {
+			options.logger->warning("[Consolidate] Ignored missing glyph /%s.\n", h->name);
+			h = coverage.erase(h);
+		} else
+			h++;
+}
+
+void classdef(font &font, table::otl::class_definition &classdef, const options &options) {
+	for (auto h = classdef.begin(); h != classdef.end();)
+		if (!font.glyph_order.consolidate_handle(h->first)) {
+			options.logger->warning("[Consolidate] Ignored missing glyph /%s.\n", h->first.name);
+			classdef.erase(h);
+		} else
+			h++;
+}
+
+bool chaining(font &font, table::otl &table, table::otl::subtable &_subtable,
+              const options &options) {
+	auto &subtable = std::get<table::otl::subtable_chaining>(_subtable);
+	if (subtable.type != table::otl::chaining_type::canonical) {
+		options.logger->warning("[Consolidate] Ignoring non-canonical chaining subtable.");
+		return false;
+	}
+	auto &rule = std::get<table::otl::chaining_rule>(subtable.rule);
+	bool possible = true;
+	for (auto &match : rule.match) {
+		coverage(font, match, options);
+		possible = possible && match.size() > 0;
+	}
+	if (rule.inputBegins > rule.match.size())
+		rule.inputBegins = rule.match.size();
+	if (rule.inputEnds > rule.match.size())
+		rule.inputEnds = rule.match.size();
+	for (auto apply = rule.apply.begin(); apply != rule.apply.end();) {
+		bool foundLookup = false;
+		auto &h = apply->lookup;
+		if (!h.name.empty()) {
+			for (tableid_t k = 0; k < table.lookups.size(); k++) {
+				if (!table.lookups[k]->subtables.size())
+					continue;
+				if (table.lookups[k]->name != h.name)
+					continue;
+				foundLookup = true;
+				h = handle(k, table.lookups[k]->name);
+			}
+			if (!foundLookup && !apply->lookup.name.empty()) {
+				options.logger->warning("[Consolidate] Quoting an invalid lookup %s. "
+				                        "This lookup application is ignored.",
+				                        apply->lookup.name);
+				apply = rule.apply.erase(apply);
+			} else
+				apply++;
+		} else if (h.state == handle::state_t::indexed) {
+			if (h.index >= table.lookups.size()) {
+				options.logger->warning("[Consolidate] Quoting an invalid lookup #%d.", h.index);
+				h.index = 0;
+			}
+			h = handle(h.index, table.lookups[h.index]->name);
+			apply++;
+		} else
+			apply++;
+	}
+	// If a rule is designed to have no lookup application, it may be a ignoration
+	// otfcc will keep them.
+	if (rule.apply.size())
+		return true;
+	return !possible;
+}
+
+} // namespace otl
 
 // Consolidation
 // Replace name entries in json to ids and do some check
-static int by_stem_pos(const glyf_PostscriptStemDef *a, const glyf_PostscriptStemDef *b) {
-	if (a->position == b->position) {
-		return (int)a->map - (int)b->map;
-	} else if (a->position > b->position) {
-		return 1;
-	} else {
-		return -1;
-	}
-}
-static int by_mask_pointindex(const glyf_PostscriptHintMask *a, const glyf_PostscriptHintMask *b) {
-	return a->contoursBefore == b->contoursBefore ? a->pointsBefore - b->pointsBefore
-	                                              : a->contoursBefore - b->contoursBefore;
-}
 
 static void consolidateGlyphContours(glyf_Glyph *g, const otfcc_Options *options) {
 	shapeid_t nContoursConsolidated = 0;
@@ -116,10 +171,13 @@ static void consolidateGlyphHints(glyf_Glyph *g, const otfcc_Options *options) {
 }
 static void consolidateFDSelect(fd_handle *h, table_CFF *cff, const otfcc_Options *options,
                                 const sds gname) {
-	if (!cff || !cff->fdArray || !cff->fdArrayCount) return;
+	if (!cff || !cff->fdArray || !cff->fdArrayCount)
+		return;
 	// Consolidate fdSelect
 	if (h->state == HANDLE_STATE_INDEX) {
-		if (h->index >= cff->fdArrayCount) { h->index = 0; }
+		if (h->index >= cff->fdArrayCount) {
+			h->index = 0;
+		}
 		Handle.consolidateTo(h, h->index, cff->fdArray[h->index]->fontName);
 	} else if (h->name) {
 		bool found = false;
@@ -181,14 +239,16 @@ bool getPointCoordinates(table_glyf *table, glyf_ComponentReference *gr, shapeid
 
 		bool success = getPointCoordinates(table, &ref, n, stated, x, y, options);
 		glyf_iComponentReference.dispose(&ref);
-		if (success) return true;
+		if (success)
+			return true;
 	}
 	return false;
 }
 
 bool consolidateAnchorRef(table_glyf *table, glyf_ComponentReference *gr,
                           glyf_ComponentReference *rr, const otfcc_Options *options) {
-	if (rr->isAnchored == REF_ANCHOR_CONSOLIDATED || rr->isAnchored == REF_XY) return true;
+	if (rr->isAnchored == REF_ANCHOR_CONSOLIDATED || rr->isAnchored == REF_XY)
+		return true;
 	if (rr->isAnchored == REF_ANCHOR_CONSOLIDATING_ANCHOR ||
 	    rr->isAnchored == REF_ANCHOR_CONSOLIDATING_XY) {
 		logWarning(
@@ -210,7 +270,9 @@ bool consolidateAnchorRef(table_glyf *table, glyf_ComponentReference *gr,
 
 	bool s1 = getPointCoordinates(table, gr, rr->outer, &outerCounter, &outerX, &outerY, options);
 	bool s2 = getPointCoordinates(table, &rr1, rr->inner, &innerCounter, &innerX, &innerY, options);
-	if (!s1) { logWarning("Failed to access point %d in outer glyph.", rr->outer); }
+	if (!s1) {
+		logWarning("Failed to access point %d in outer glyph.", rr->outer);
+	}
 	if (!s2) {
 		logWarning("Failed to access point %d in reference to %s.", rr->outer, rr->glyph.name);
 	}
@@ -238,7 +300,8 @@ bool consolidateAnchorRef(table_glyf *table, glyf_ComponentReference *gr,
 }
 
 void consolidateGlyf(otfcc_Font *font, const otfcc_Options *options) {
-	if (!font->glyph_order || !font->glyf) return;
+	if (!font->glyph_order || !font->glyf)
+		return;
 	for (glyphid_t j = 0; j < font->glyf->length; j++) {
 		if (font->glyf->items[j]) {
 			consolidateGlyph(font->glyf->items[j], font, options);
@@ -294,7 +357,8 @@ typedef void (*subtable_remover)(otl_Subtable *);
 static void __declare_otl_consolidation(otl_LookupType type, otl_consolidation_function fn,
                                         subtable_remover fndel, otfcc_Font *font, table_OTL *table,
                                         otl_Lookup *lookup, const otfcc_Options *options) {
-	if (!lookup || !lookup->subtables.length || lookup->type != type) return;
+	if (!lookup || !lookup->subtables.length || lookup->type != type)
+		return;
 	loggedStep("%s", lookup->name) {
 		for (tableid_t j = 0; j < lookup->subtables.length; j++) {
 			if (!lookup->subtables.items[j]) {
@@ -364,7 +428,8 @@ static bool featureIsNotEmpty(const otl_FeaturePtr *rFeat, void *env) {
 }
 
 static void consolidateOTLTable(otfcc_Font *font, table_OTL *table, const otfcc_Options *options) {
-	if (!font->glyph_order || !table) return;
+	if (!font->glyph_order || !table)
+		return;
 	do {
 		tableid_t featN = table->features.length;
 		tableid_t lutN = table->lookups.length;
@@ -388,24 +453,20 @@ static void consolidateOTLTable(otfcc_Font *font, table_OTL *table, const otfcc_
 
 		tableid_t featN1 = table->features.length;
 		tableid_t lutN1 = table->lookups.length;
-		if (featN1 >= featN && lutN1 >= lutN) break;
+		if (featN1 >= featN && lutN1 >= lutN)
+			break;
 	} while (true);
 }
 
 static void consolidateOTL(otfcc_Font *font, const otfcc_Options *options) {
-	loggedStep("GSUB") {
-		consolidateOTLTable(font, font->GSUB, options);
-	}
-	loggedStep("GPOS") {
-		consolidateOTLTable(font, font->GPOS, options);
-	}
-	loggedStep("GDEF") {
-		consolidate_GDEF(font, font->GDEF, options);
-	}
+	loggedStep("GSUB") { consolidateOTLTable(font, font->GSUB, options); }
+	loggedStep("GPOS") { consolidateOTLTable(font, font->GPOS, options); }
+	loggedStep("GDEF") { consolidate_GDEF(font, font->GDEF, options); }
 }
 
 static void consolidateCOLR(otfcc_Font *font, const otfcc_Options *options) {
-	if (!font || !font->COLR || !font->glyph_order) return;
+	if (!font || !font->COLR || !font->glyph_order)
+		return;
 	table_COLR *consolidated = table_iCOLR.create();
 	foreach (colr_Mapping *mapping, *(font->COLR)) {
 		if (!GlyphOrder.consolidateHandle(font->glyph_order, &mapping->glyph)) {
@@ -436,13 +497,15 @@ static void consolidateCOLR(otfcc_Font *font, const otfcc_Options *options) {
 }
 
 static int compareTSIEntry(const tsi_Entry *a, const tsi_Entry *b) {
-	if (a->type != b->type) return a->type - b->type;
+	if (a->type != b->type)
+		return a->type - b->type;
 	return a->glyph.index - b->glyph.index;
 }
 
 static void consolidateTSI(otfcc_Font *font, table_TSI **_tsi, const otfcc_Options *options) {
 	table_TSI *tsi = *_tsi;
-	if (!font || !font->glyf || !tsi || !font->glyph_order) return;
+	if (!font || !font->glyf || !tsi || !font->glyph_order)
+		return;
 	table_TSI *consolidated = table_iTSI.create();
 	sds *gidEntries;
 	NEW_CLEAN_N(gidEntries, font->glyf->length);
@@ -450,7 +513,8 @@ static void consolidateTSI(otfcc_Font *font, table_TSI **_tsi, const otfcc_Optio
 	foreach (tsi_Entry *entry, *tsi) {
 		if (entry->type == TSI_GLYPH) {
 			if (GlyphOrder.consolidateHandle(font->glyph_order, &entry->glyph)) {
-				if (gidEntries[entry->glyph.index]) sdsfree(gidEntries[entry->glyph.index]);
+				if (gidEntries[entry->glyph.index])
+					sdsfree(gidEntries[entry->glyph.index]);
 				gidEntries[entry->glyph.index] = entry->content;
 				entry->content = NULL;
 			} else {
@@ -510,23 +574,16 @@ void otfcc_consolidateFont(otfcc_Font *font, const otfcc_Options *options) {
 		}
 		font->glyph_order = go;
 	}
-	loggedStep("glyf") {
-		consolidateGlyf(font, options);
-	}
-	loggedStep("cmap") {
-		consolidateCmap(font, options);
-	}
-	if (font->glyf) consolidateOTL(font, options);
-	loggedStep("COLR") {
-		consolidateCOLR(font, options);
-	}
-	loggedStep("TSI_01") {
-		consolidateTSI(font, &font->TSI_01, options);
-	}
-	loggedStep("TSI_23") {
-		consolidateTSI(font, &font->TSI_23, options);
-	}
-	loggedStep("TSI5") {
-		fontop_consolidateClassDef(font, font->TSI5, options);
-	}
+	loggedStep("glyf") { consolidateGlyf(font, options); }
+	loggedStep("cmap") { consolidateCmap(font, options); }
+	if (font->glyf)
+		consolidateOTL(font, options);
+	loggedStep("COLR") { consolidateCOLR(font, options); }
+	loggedStep("TSI_01") { consolidateTSI(font, &font->TSI_01, options); }
+	loggedStep("TSI_23") { consolidateTSI(font, &font->TSI_23, options); }
+	loggedStep("TSI5") { fontop_consolidateClassDef(font, font->TSI5, options); }
 }
+
+void consolidate_font(font &font, const options &options);
+
+} // namespace otfcc::consolidate

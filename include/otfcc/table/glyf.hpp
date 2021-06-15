@@ -1,5 +1,6 @@
 #pragma once
 
+#include <compare>
 #include <memory>
 #include <string>
 #include <vector>
@@ -40,6 +41,10 @@ struct cff_stem {
 	pos_t position;
 	pos_t width;
 	uint16_t map;
+
+	std::partial_ordering operator<=>(const cff_stem &rhs) {
+		return std::pair{position, map} <=> std::pair{rhs.position, rhs.map};
+	}
 };
 using stem_list = std::vector<cff_stem>;
 
@@ -48,6 +53,11 @@ struct cff_hint_mask {
 	uint16_t contoursBefore;
 	bool maskH[0x100];
 	bool maskV[0x100];
+
+	auto operator<=>(const cff_hint_mask &rhs) {
+		return std::pair{contoursBefore, pointsBefore} <=>
+		       std::pair{rhs.contoursBefore, rhs.pointsBefore};
+	}
 };
 using mask_list = std::vector<cff_hint_mask>;
 

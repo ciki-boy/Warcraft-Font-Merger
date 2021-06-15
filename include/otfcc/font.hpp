@@ -1,5 +1,9 @@
 #pragma once
 
+#include <optional>
+
+#include <nlohmann/json.hpp>
+
 #include "sfnt.h"
 
 namespace otfcc {
@@ -13,38 +17,37 @@ struct font;
 #endif
 
 #include "table/cff_.hpp"
-#include "table/os_2.hpp"
 #include "table/glyf.hpp"
 #include "table/hdmx.hpp"
 #include "table/head.hpp"
 #include "table/hhea.hpp"
 #include "table/hmtx.hpp"
 #include "table/maxp.hpp"
-#include "table/meta.h"
-#include "table/name.h"
-#include "table/post.h"
-#include "table/vhea.h"
+#include "table/meta.hpp"
+#include "table/name.hpp"
+#include "table/os_2.hpp"
+#include "table/post.hpp"
+#include "table/vhea.hpp"
 #include "table/vmtx.hpp"
 
-#include "table/VDMX.h"
-#include "table/cmap.h"
-#include "table/cvt.h"
-#include "table/fpgm-prep.h"
-#include "table/gasp.h"
+#include "table/cmap.hpp"
+#include "table/cvt_.hpp"
+#include "table/fpgm-prep.hpp"
+#include "table/gasp.hpp"
+#include "table/vdmx.hpp"
 
-#include "table/LTSH.h"
-#include "table/VORG.h"
+#include "table/ltsh.hpp"
+#include "table/vorg.hpp"
 
-#include "table/BASE.h"
-#include "table/GDEF.h"
-#include "table/otl.h"
+#include "table/base.hpp"
+#include "table/gdef.hpp"
+#include "table/otl.hpp"
 
-#include "table/COLR.h"
-#include "table/CPAL.h"
-#include "table/SVG.h"
+#include "table/colr.hpp"
+#include "table/cpal.hpp"
+#include "table/svg_.hpp"
 
-#include "table/TSI5.h"
-#include "table/_TSI.h"
+namespace otfcc {
 
 struct font {
 
@@ -53,71 +56,51 @@ struct font {
 	outline subtype;
 
 #if defined(OTFCC_ENABLE_VARIATION) && OTFCC_ENABLE_VARIATION
-	table_fvar *fvar;
+	std::optional<table::fvar> fvar;
 #endif
 
-	table_head *head;
-	table_hhea *hhea;
-	table_maxp *maxp;
-	table_OS_2 *OS_2;
-	table_hmtx *hmtx;
-	table_post *post;
-	table_hdmx *hdmx;
+	std::optional<table::head> head;
+	std::optional<table::hhea> hhea;
+	std::optional<table::maxp> maxp;
+	std::optional<table::os_2> OS_2;
+	std::optional<table::hmtx> hmtx;
+	std::optional<table::post> post;
+	std::optional<table::hdmx> hdmx;
 
-	table_vhea *vhea;
-	table_vmtx *vmtx;
-	table_VORG *VORG;
+	std::optional<table::vhea> vhea;
+	std::optional<table::vmtx> vmtx;
+	std::optional<table::vorg> VORG;
 
-	table_CFF *CFF_;
-	table_glyf *glyf;
-	table_cmap *cmap;
-	table_name *name;
-	table_meta *meta;
+	std::optional<table::cff_> CFF_;
+	table::glyf::table glyf;
+	std::optional<table::cmap> cmap;
+	table::name::table name;
+	std::optional<table::meta> meta;
 
-	table_fpgm_prep *fpgm;
-	table_fpgm_prep *prep;
-	table_cvt *cvt_;
-	table_gasp *gasp;
-	table_VDMX *VDMX;
+	std::optional<table::fpgm_prep> fpgm;
+	std::optional<table::fpgm_prep> prep;
+	std::optional<table::cvt_> cvt_;
+	std::optional<table::gasp> gasp;
+	std::optional<table::vdmx> VDMX;
 
-	table_LTSH *LTSH;
+	std::optional<table::ltsh> LTSH;
 
-	table_OTL *GSUB;
-	table_OTL *GPOS;
-	table_GDEF *GDEF;
-	table_BASE *BASE;
+	std::optional<table::otl> GSUB;
+	std::optional<table::otl> GPOS;
+	std::optional<table::gdef> GDEF;
+	std::optional<table::base> BASE;
 
-	table_CPAL *CPAL;
-	table_COLR *COLR;
-	table_SVG *SVG_;
+	std::optional<table::cpal> CPAL;
+	table::colr::table COLR;
+	table::svg::table SVG_;
 
-	table_TSI *TSI_01;
-	table_TSI *TSI_23;
-	table_TSI5 *TSI5;
+	glyph_order glyph_order;
 
-	otfcc_GlyphOrder *glyph_order;
+	void consolidate(const options options);
+
+	font(void *source, uint32_t index, const options &options);
+
+	nlohmann::json serialize(const options &options);
 };
 
-extern caryll_ElementInterfaceOf(otfcc_Font) {
-	caryll_RT(otfcc_Font);
-	void (*consolidate)(otfcc_Font * font, const otfcc_Options *options);
-	void *(*createTable)(otfcc_Font * font, const uint32_t tag);
-	void (*deleteTable)(otfcc_Font * font, const uint32_t tag);
-}
-otfcc_iFont;
-
-// Font builder interfaces
-typedef struct otfcc_IFontBuilder {
-	otfcc_Font *(*read)(void *source, uint32_t index, const otfcc_Options *options);
-	void (*free)(struct otfcc_IFontBuilder *self);
-} otfcc_IFontBuilder;
-otfcc_IFontBuilder *otfcc_newOTFReader();
-otfcc_IFontBuilder *otfcc_newJsonReader();
-
-// Font serializer interface
-typedef struct otfcc_IFontSerializer {
-	void *(*serialize)(otfcc_Font *font, const otfcc_Options *options);
-	void (*free)(struct otfcc_IFontSerializer *self);
-} otfcc_IFontSerializer;
-otfcc_IFontSerializer *otfcc_newJsonWriter();
-otfcc_IFontSerializer *otfcc_newOTFWriter();
+} // namespace otfcc

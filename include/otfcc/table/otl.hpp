@@ -98,19 +98,32 @@ struct otl {
 			}
 		}
 
+		void sort_unique() {
+			std::sort(begin(), end(),
+			          [](const handle &a, const handle &b) { return a.index < b.index; });
+			auto it = std::unique(begin(), end(), [](const handle &a, const handle &b) {
+				return a.index == b.index;
+			});
+			resize(it - begin());
+		}
+
 		void consolidate(const glyph_order &gord) {
 			std::vector<glyph_handle> consolidated;
-			for (glyph_handle &h : *this) {
+			for (glyph_handle &h : *this)
 				if (gord.consolidate_handle(h))
 					consolidated.push_back(h);
-			}
-			std::sort(consolidated.begin(), consolidated.end(),
-			          [](const handle &a, const handle &b) { return a.index < b.index; });
-			auto it =
-			    std::unique(consolidated.begin(), consolidated.end(),
-			                [](const handle &a, const handle &b) { return a.index == b.index; });
-			consolidated.resize(it - consolidated.begin());
 			swap(consolidated);
+			sort_unique();
+		}
+
+		void shrink(bool dosort) {
+			std::vector<glyph_handle> shrunk;
+			for (glyph_handle &h : *this)
+				if (!h.name.empty())
+					shrunk.push_back(h);
+			swap(shrunk);
+			if (dosort)
+				sort_unique();
 		}
 
 		// assume consolidated
@@ -427,7 +440,7 @@ struct otl {
 	struct chaining_rule {
 		tableid_t inputBegins;
 		tableid_t inputEnds;
-		std::vector<std::vector<coverage>> match;
+		std::vector<coverage> match;
 		std::vector<clain_lookup_application> apply;
 	};
 

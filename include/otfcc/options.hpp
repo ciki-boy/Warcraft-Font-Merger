@@ -35,7 +35,7 @@ struct options {
 	bool name_glyphs_by_hash;
 	bool name_glyphs_by_gid;
 	std::string glyph_name_prefix;
-	std::shared_ptr<logger::base> logger;
+	std::unique_ptr<logger::base> logger;
 
 	options() = default;
 	~options() = default;

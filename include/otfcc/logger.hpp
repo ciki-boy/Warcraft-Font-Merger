@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <cstdio>
 #include <iostream>
 #include <ostream>
 #include <string>
@@ -8,19 +9,19 @@
 
 namespace otfcc::logger {
 
-enum type {
-	log_type_error = 0,
-	log_type_warning = 1,
-	log_type_info = 2,
-	log_type_progress = 3,
+enum class type {
+	error = 0,
+	warning = 1,
+	info = 2,
+	progress = 3,
 };
 
-enum {
-	log_vl_critical = 0,
-	log_vl_important = 1,
-	log_vl_notice = 2,
-	log_vl_info = 5,
-	log_vl_progress = 10,
+enum class verbosity {
+	critical = 0,
+	important = 1,
+	notice = 2,
+	info = 5,
+	progress = 10,
 };
 
 constexpr const char *names[3] = {"[ERROR]", "[WARNING]", "[NOTE]"};
@@ -29,6 +30,12 @@ class base {
   public:
 	base() = default;
 	virtual ~base() = default;
+
+	template <typename... Ts> void warning(const char *format, Ts... args) {
+		char buffer[4096];
+		snprintf(buffer, sizeof buffer, format, args...);
+		log(verbosity::important, type::warning, buffer);
+	}
 
 	// add a level
 	virtual void indent(const char *segment) = 0;
@@ -45,11 +52,11 @@ class base {
 	virtual void finish() = 0;
 
 	// log a data
-	virtual void log(uint8_t verbosity, type type, const char *data) = 0;
-	virtual void log(uint8_t verbosity, type type, const std::string &data) = 0;
+	virtual void log(verbosity verbosity, type type, const char *data) = 0;
+	virtual void log(verbosity verbosity, type type, const std::string &data) = 0;
 
 	// remove a level
-	virtual void set_verbosity(uint8_t verbosity) = 0;
+	virtual void set_verbosity(verbosity verbosity) = 0;
 };
 
 class empty : public base {
@@ -67,10 +74,10 @@ class empty : public base {
 
 	void finish() override {}
 
-	void log(uint8_t verbosity, type type, const char *data) override {}
-	void log(uint8_t verbosity, type type, const std::string &data) override {}
+	void log(verbosity verbosity, type type, const char *data) override {}
+	void log(verbosity verbosity, type type, const std::string &data) override {}
 
-	void set_verbosity(uint8_t verbosity) override {}
+	void set_verbosity(verbosity verbosity) override {}
 };
 
 class ostream : public base {
@@ -79,7 +86,7 @@ class ostream : public base {
 	std::vector<std::string> _indents;
 	uint16_t _level;
 	uint16_t _level_last;
-	uint8_t _verbosity_limit;
+	verbosity _verbosity_limit;
 
   public:
 	ostream(std::ostream &stream) : _stream(stream) {}
@@ -105,22 +112,22 @@ class ostream : public base {
 
 	void start(const char *segment) override {
 		indent(segment);
-		log(log_vl_progress + _level, log_type_progress, "Begin");
+		log(verbosity{int(verbosity::progress) + _level}, type::progress, "Begin");
 	};
 	void start(const std::string &segment) override {
 		indent(segment);
-		log(log_vl_progress + _level, log_type_progress, "Begin");
+		log(verbosity{int(verbosity::progress) + _level}, type::progress, "Begin");
 	};
 
 	void finish() override {
-		log(log_vl_progress + _level, log_type_progress, "Finish");
+		log(verbosity{int(verbosity::progress) + _level}, type::progress, "Finish");
 		dedent();
 	};
 
-	void log(uint8_t verbosity, type type, const char *data) override {
+	void log(verbosity verbosity, type type, const char *data) override {
 		log(verbosity, type, std::string(data));
 	};
-	void log(uint8_t verbosity, type type, const std::string &data) override {
+	void log(verbosity verbosity, type type, const std::string &data) override {
 		std::string demand;
 		for (uint16_t level = 0; level < _level; level++) {
 			if (level < _level_last - 1) {
@@ -132,8 +139,8 @@ class ostream : public base {
 			} else
 				demand += _indents[level] + " : ";
 		}
-		if (type < sizeof names / sizeof names[0])
-			demand += std::string(names[type]) + " " + data;
+		if (int(type) < sizeof names / sizeof names[0])
+			demand += std::string(names[size_t(type)]) + " " + data;
 		else
 			demand += data;
 		if (verbosity <= _verbosity_limit) {
@@ -144,7 +151,7 @@ class ostream : public base {
 		}
 	};
 
-	void set_verbosity(uint8_t verbosity) override { _verbosity_limit = verbosity; };
+	void set_verbosity(verbosity verbosity) override { _verbosity_limit = verbosity; };
 };
 
 } // namespace otfcc::logger
